@@ -50,14 +50,10 @@ def test_provider() -> DataProvider:
     "source",
     [
         "surface",
-        # "satellite-balfrin", # problem: user can't access msclim data
-        "satellite-gridefix",
         "satellite-eumetsat",
         "opera",
-        "radar",
         "kenda-ch1-before-filename-change",
         "kenda-ch1-after-filename-change",
-        "gridefix-model-data",
     ],
 )
 def test_end2end(
@@ -72,6 +68,7 @@ def test_end2end(
     source, and performing basic assertions to ensure data is returned.
 
     Parameters
+    Parameters
     ----------
     test_provider : DataProvider
         An instance of the DataProvider class, configured with all retrievers
@@ -81,7 +78,7 @@ def test_end2end(
 
     Notes
     -----
-    - The configuration for each source is loaded from `test/config_end2end.yaml`.
+    - The configuration for each source is loaded from `tests/config_end2end.yaml`.
     - Some sources are commented out due to known issues (e.g., missing credentials,
       no data available, or runtime errors).
     - Additional tests for data validation (e.g., variable checks, date checks,
@@ -92,7 +89,7 @@ def test_end2end(
     AssertionError
         If no data is returned for the specified source.
     """
-    configdict = load_yaml("test/config_end2end.yaml")
+    configdict = load_yaml("tests/config_end2end.yaml")
     kwargs = configdict[source]
     logging.info(f"Testing source: {source} with kwargs: {kwargs}")
     data = test_provider.provide(**kwargs)
@@ -102,5 +99,8 @@ def test_end2end(
     time_dim = "time" if "time" in data[varname].dims else "forecast_reference_time"
     assert data, "Data is None or empty"
     assert kwargs["variables"] == varname, "Dataset is missing requested variable."
-    assert data[time_dim].values[0].astype("datetime64[D]").astype(object) == kwargs["dates"], "wrong date in dataset"
+    assert (
+        data[time_dim].values[0].astype("datetime64[D]").astype(object)
+        == kwargs["dates"]
+    ), "wrong date in dataset"
     assert not data.to_array().isnull().all(), "All values are NaN."

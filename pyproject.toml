@@ -18,6 +18,7 @@ dependencies = [
     "numpy>=1.26.4",
     "omegaconf>=2.3.0",
     "pandas>=2.3.2",
+    "wradlib>=2.4.0",
     "xarray>=2025.6.1",
     "zarr>=2.18.3",
 ]
@@ -28,6 +29,16 @@ radar = [
 ]
 eumetsat = ["satpy", "eumdac", "pyresample"]
 dem = ["rioxarray", "pystac-client", "planetary-computer"]
+
+[project.entry-points."weathermart.retriever"]
+GribRetriever = "weathermart.retrievers:GribRetriever"
+CEDTMRetriever = "weathermart.retrievers:CEDTMRetriever"
+NASADEMRetriever = "weathermart.retrievers:NASADEMRetriever"
+DHM25Retriever = "weathermart.retrievers:DHM25Retriever"
+DWHRetriever = "weathermart.retrievers:DWHRetriever"
+NWPRetrieverFDB = "weathermart.retrievers:NWPRetrieverFDB"
+OperaRetriever = "weathermart.retrievers:OperaRetriever"
+EumetsatRetriever = "weathermart.retrievers:EumetsatRetriever"
 
 [dependency-groups]
 dev = [

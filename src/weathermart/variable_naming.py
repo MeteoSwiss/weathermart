@@ -15,5 +15,4 @@ def get_variables() -> dict[str, Any]:
     pandas.DataFrame
         DataFrame containing variable definitions.
     """
-    variable_file = Path(__file__).parent / "variable_metadata.csv"
-    return pd.read_csv(variable_file)
+    return pd.read_csv(Path(__file__).parent / "variable_metadata.csv")

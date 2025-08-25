@@ -44,7 +44,7 @@ class BaseRetriever(ABC):
     crs: str | dict[str, str]
     """Coordinate reference system for the data. Saved as part of the dataset metadata.
     Can be a grid mapping/proj str, or "epsg:N" where N is an EPSG code. Anything
-    readable by pyproj is accepted. If the retriever is a composition of other 
+    readable by pyproj is accepted. If the retriever is a composition of other
     retrievers, the crs can be a dictionary.
     """
     _ignored_args: list[str] = [
@@ -120,7 +120,9 @@ class BaseRetriever(ABC):
             from subretrievers. Duplicates are removed.
         """
         kwarg_keys = [
-            x for x in list(inspect.signature(self.retrieve).parameters.keys()) if x not in self._ignored_args
+            x
+            for x in list(inspect.signature(self.retrieve).parameters.keys())
+            if x not in self._ignored_args
         ]
         if self.subretrievers:
             if isinstance(self.subretrievers, dict):
@@ -157,7 +159,9 @@ class BaseRetriever(ABC):
         kwarg_keys = self.get_kwargs()
         for kwarg in kwargs:
             if kwarg not in kwarg_keys:
-                raise ValueError(f"Kwarg {kwarg} not implemented for {self} retriever. Options are {kwarg_keys}.")
+                raise ValueError(
+                    f"Kwarg {kwarg} not implemented for {self} retriever. Options are {kwarg_keys}."
+                )
 
 
 dask.config.set({"array.chunk-size": "256MiB"})
@@ -195,7 +199,11 @@ def checktype(
         dates = [dates]
     if isinstance(variables, str):
         variables = [(variables, {})]
-    elif bool(variables) and isinstance(variables, list) and all(isinstance(elem, str) for elem in variables):
+    elif (
+        bool(variables)
+        and isinstance(variables, list)
+        and all(isinstance(elem, str) for elem in variables)
+    ):
         variables = [(v, {}) for v in variables]
     return dates, variables
 

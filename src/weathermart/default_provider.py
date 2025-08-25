@@ -14,10 +14,7 @@ def available_retrievers() -> tuple[BaseRetriever, ...]:
     Returns
     -------
     list
-        List containing instances of available data retrievers:
-        SatelliteRetriever, NWCRetriever, NWPRetriever, DWHRetriever,
-        MCHRadarRetriever, OperaRadarRetriever, NASADEMRetriever, CEDTMRetriever, DHM25Retriever,
-        and GeosatclimRetriever.
+        List containing instances of available data retrievers.
     """
     retrievers: list[BaseRetriever] = []
 
@@ -43,6 +40,11 @@ def default_provider(cache_location: Path | None = None) -> DataProvider:
     This function creates a CacheProvider using the given location,
     prints a message indicating the cache location, and returns an DataProvider
     configured with all available retrievers.
+
+    Parameters
+    ----------
+    cache_location : Path, optional
+        Path to the cache directory. If None, no caching is used. Default is None.
 
     Returns
     -------

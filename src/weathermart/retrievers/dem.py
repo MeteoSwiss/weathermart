@@ -193,6 +193,7 @@ class DHM25Retriever(DEMRetriever):
         return dem
 
     def retrieve(self, source: str, variables: Any, dates: Any) -> xr.Dataset:
+        """Retrieve DHM25 DEM data."""
         dem = self.load_dhm(
             "https://cms.geo.admin.ch/ogd/topography/DHM25_MM_ASCII_GRID.zip"
         )

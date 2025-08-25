@@ -5,11 +5,11 @@ import pandas as pd
 import pytest
 import xarray as xr
 
+from weathermart.base import BaseRetriever
+from weathermart.base import checktype
 from weathermart.provide import CacheRetriever
 from weathermart.provide import DataProvider
 from weathermart.retrieve import DataRetriever
-from weathermart.base import BaseRetriever
-from weathermart.base import checktype
 
 
 class DummyRetriever(BaseRetriever):
@@ -40,7 +40,9 @@ class MockRetriever(BaseRetriever):
         if source not in self.sources:
             raise ValueError(f"Unknown source {source}.")
         for date in dates:
-            time = pd.date_range(start=f"{date} 00:00:00", end=f"{date} 23:50:50", freq="10min")
+            time = pd.date_range(
+                start=f"{date} 00:00:00", end=f"{date} 23:50:50", freq="10min"
+            )
             temperature = 15 * np.ones((len(time), len(self.fake_stations)))
             precipitation = 10 * np.ones((len(time), len(self.fake_stations)))
             var_map = {
@@ -148,7 +150,9 @@ def test_args():
 
 
 def test_dataretriever_kwargs():
-    retriever = DataRetriever([MockRetrieverWithKwargs(), MockRetrieverWithOtherKwargs()])
+    retriever = DataRetriever(
+        [MockRetrieverWithKwargs(), MockRetrieverWithOtherKwargs()]
+    )
 
     assert retriever.get_kwargs() == [
         "special_kwarg",
@@ -165,4 +169,6 @@ def test_dataretriever_kwargs():
     with pytest.raises(ValueError):
         retriever.validate_kwargs(["fake_kwarg"])  # no kwarg is valid
     with pytest.raises(ValueError):
-        retriever.validate_kwargs(["special_kwarg", "fake_kwarg"])  # one kwarg is not valid
+        retriever.validate_kwargs(
+            ["special_kwarg", "fake_kwarg"]
+        )  # one kwarg is not valid

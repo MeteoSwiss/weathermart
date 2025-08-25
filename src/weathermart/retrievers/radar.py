@@ -42,7 +42,9 @@ def read_radar_file_or_raise(file: os.PathLike) -> Any:
     try:
         import wradlib as wrl
     except ImportError:
-        raise ImportError("The 'wradlib' package is required to use the RadarRetriever.")
+        raise ImportError(
+            "The 'wradlib' package is required to use the RadarRetriever."
+        )
     try:
         radar_data = wrl.io.hdf.read_opera_hdf5(file)
         return radar_data
@@ -50,7 +52,7 @@ def read_radar_file_or_raise(file: os.PathLike) -> Any:
         raise RuntimeError(f"File {file} does not exist.", e)
 
 
-class OperaAPIRadarRetriever(BaseRetriever):
+class OperaRetriever(BaseRetriever):
     """
     Class for retrieving and processing Opera radar data from the MeteoFrance API.
     """
@@ -69,7 +71,9 @@ class OperaAPIRadarRetriever(BaseRetriever):
     crs = "+proj=laea +lat_0=55.0 +lon_0=10.0 +x_0=1950000.0 +y_0=-2100000.0 +units=m +ellps=WGS84"
     src_proj = Proj(crs)
     # Transform the lat/lon corners to the OPERA radar projection
-    lonlat_transformer = Transformer.from_proj(Proj("EPSG:4326"), src_proj, always_xy=True)
+    lonlat_transformer = Transformer.from_proj(
+        Proj("EPSG:4326"), src_proj, always_xy=True
+    )
     LL_x, LL_y = lonlat_transformer.transform(LL_lon, LL_lat)
     LR_x, LR_y = lonlat_transformer.transform(LR_lon, LR_lat)
     UL_x, UL_y = lonlat_transformer.transform(UL_lon, UL_lat)
@@ -80,7 +84,10 @@ class OperaAPIRadarRetriever(BaseRetriever):
 
     # target grid: Regular lat lon grid
     custom_target_grid = xr.Dataset(
-        {"x": np.arange(ICON_DOMAIN[0], ICON_DOMAIN[2], 0.01), "y": np.arange(ICON_DOMAIN[1], ICON_DOMAIN[3], 0.01)},
+        {
+            "x": np.arange(ICON_DOMAIN[0], ICON_DOMAIN[2], 0.01),
+            "y": np.arange(ICON_DOMAIN[1], ICON_DOMAIN[3], 0.01),
+        },
         attrs={
             "grid_mapping": {
                 "epsg_code": "4326",
@@ -89,7 +96,9 @@ class OperaAPIRadarRetriever(BaseRetriever):
         },
     )
 
-    def process_radar_file(self,radar_file: pathlib.Path, remove_clutter: bool = True) -> xr.Dataset:
+    def process_radar_file(
+        self, radar_file: pathlib.Path, remove_clutter: bool = True
+    ) -> xr.Dataset:
         """
         Process a single OPERA radar file and return an xarray.Dataset.
 
@@ -108,7 +117,8 @@ class OperaAPIRadarRetriever(BaseRetriever):
         radar_data = read_radar_file_or_raise(radar_file)
         header = radar_data["dataset1/what"]
         timestamp = datetime.datetime.strptime(
-            (radar_data["what"]["date"] + radar_data["what"]["time"]).decode(), "%Y%m%d%H%M%S"
+            (radar_data["what"]["date"] + radar_data["what"]["time"]).decode(),
+            "%Y%m%d%H%M%S",
         )
         nodata = header["nodata"]
         undetect = header["undetect"]
@@ -123,7 +133,9 @@ class OperaAPIRadarRetriever(BaseRetriever):
             # also, sometimes there are very high values (around 300).
             values[values > 150] = 0
         else:
-            logging.warning("Warning: Clutter is not removed from the OPERA radar data.")
+            logging.warning(
+                "Warning: Clutter is not removed from the OPERA radar data."
+            )
 
         ds = xr.Dataset(
             {"TOT_PREC": (("time", "y", "x"), values[None, ::-1, :])},
@@ -142,7 +154,6 @@ class OperaAPIRadarRetriever(BaseRetriever):
             ds["TOT_PREC"].attrs["undetect"] = 0
 
         return ds
-
 
     def retrieve(
         self,
@@ -181,17 +192,19 @@ class OperaAPIRadarRetriever(BaseRetriever):
             "The MeteoFrance API Retriever is not fully implemented. Be careful when using data from this retriever."
         )
         if meteofranceapi_token_path is None:
-            token = os.getenv("METEOFRANCE_API_TOKEN")
+            token = os.getenv("OPERA_API_TOKEN")
             if token is None:
                 raise RuntimeError(
-                    "The meteofranceapi_token_path is not set. Please provide a path to the token file as arg or set the METEOFRANCE_API_TOKEN environment variable."
+                    "The meteofranceapi_token_path is not set. Please provide a path to the token file as arg or set the OPERA_API_TOKEN environment variable."
                 )
         else:
             try:
                 with open(meteofranceapi_token_path) as f:
                     token = f.read().strip()
             except FileNotFoundError:
-                raise FileNotFoundError(f"Token file not found: {meteofranceapi_token_path}")
+                raise FileNotFoundError(
+                    f"Token file not found: {meteofranceapi_token_path}"
+                )
             except Exception as e:
                 raise RuntimeError(f"Error reading token file: {e}") from e
 
@@ -204,7 +217,9 @@ class OperaAPIRadarRetriever(BaseRetriever):
                 url = f"{self.url}archive/odyssey/composite/RAINFALL_RATE/{date.strftime('%Y-%m-%d')}?format=HDF5"
                 request = requests.get(url, headers=headers)
                 if request.status_code != 200:
-                    raise RuntimeError(f"Failed to retrieve data: {request.status_code} - {request.text}")
+                    raise RuntimeError(
+                        f"Failed to retrieve data: {request.status_code} - {request.text}"
+                    )
                 with open(tmpdirname + "file.tar", "wb") as f:
                     f.write(request.content)
                 # untar

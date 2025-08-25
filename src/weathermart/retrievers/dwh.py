@@ -19,7 +19,8 @@ from weathermart.base import variables_metadata
 from weathermart.utils import batched
 
 dwh_dic = {
-    k: [k] for k in variables_metadata[variables_metadata.source=="DWH"].short_name.unique()
+    k: [k]
+    for k in variables_metadata[variables_metadata.source == "DWH"].short_name.unique()
 }
 suffixes = {
     "instantaneous": "s0",
@@ -153,6 +154,7 @@ class DWHRetriever(BaseRetriever):
         longitude_range: tuple[float, float] = (0.5, 16.5),
         latitude_range: tuple[float, float] = (43.0, 50.0),
     ) -> geopandas.GeoDataFrame:
+        """Retrieve all stations from jretrieve within a specified geographical bounding box."""
         resp = DWHRetriever.request_from_jretrieve(
             endpoint="meta_info?infoOptions=nat_abbr,lat,lon,name&format=json-GeoJSON&headerDisabled=true",
             jretrieve_client_id=jretrieve_client_id,
@@ -181,6 +183,7 @@ class DWHRetriever(BaseRetriever):
         longitude_range: tuple[float, float] = (0.5, 16.5),
         latitude_range: tuple[float, float] = (43.0, 50.0),
     ) -> geopandas.GeoDataFrame:
+        """Retrieve stations available for specified parameters within a geographical bounding box and for a given user limitation."""
         resp = DWHRetriever.request_from_jretrieve(
             endpoint=f"meta_info?parameterShortNames={','.join(parameters)}&infoOptions=nat_abbr,use_limitation,lat,lon,name,data_owner&format=json-GeoJSON&headerDisabled=true",
             jretrieve_client_id=jretrieve_client_id,
@@ -209,6 +212,7 @@ class DWHRetriever(BaseRetriever):
         jretrieve_client_id: str,
         jretrieve_client_secret: str,
     ) -> geopandas.GeoDataFrame:
+        """Retrieve coordinates for a list of station IDs."""
         if isinstance(stations, list):
             stations = ",".join(stations)
         stations = stations.replace("_", "").replace(" ", "")

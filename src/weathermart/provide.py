@@ -34,8 +34,6 @@ def chunk_data(data: xr.DataArray | xr.Dataset) -> Any:
 class CacheRetriever:
     """
     Provides caching functionality for retrieved data.
-
-    This class manages saving and loading of cached xarray datasets using Zarr format.
     """
 
     def __init__(self, path: os.PathLike) -> None:
@@ -61,7 +59,9 @@ class CacheRetriever:
             self.__read_only = False
         except PermissionError:
             self.__read_only = True
-            logging.warning("Cache directory %s is not writable. Writing to it will fail.", path)
+            logging.warning(
+                "Cache directory %s is not writable. Writing to it will fail.", path
+            )
 
     def provide(
         self,
@@ -91,12 +91,14 @@ class CacheRetriever:
         -------
         tuple
             A tuple containing:
-                - xr.Dataset: Merged dataset of cached data.
-                - list or dict: Missing variables if any, per date.
+            - xr.Dataset: Merged dataset of cached data.
+            - list or dict: Missing variables if any, per date.
         """
         dates, variables = checktype(dates, variables)
         data = []
-        missing_vars: dict[pd.Timestamp, list[tuple[str, dict[Any, Any]]]] = {date: [] for date in dates}
+        missing_vars: dict[pd.Timestamp, list[tuple[str, dict[Any, Any]]]] = {
+            date: [] for date in dates
+        }
         for date in dates:
             date_str = date.strftime("%Y%m%d")
             to_merge = []
@@ -118,11 +120,15 @@ class CacheRetriever:
             elif "time" in data[0].dims:
                 ds = xr.concat(data, dim="time")
             elif "date" in data[0].dims:
-                ds = xr.concat(data, dim="date").rename({"date": "forecast_reference_time"})
+                ds = xr.concat(data, dim="date").rename(
+                    {"date": "forecast_reference_time"}
+                )
             elif is_static:
                 ds = xr.merge(data)
             else:
-                raise ValueError("No time dimension found. Must be one of 'time' or 'forecast_reference_time'.")
+                raise ValueError(
+                    "No time dimension found. Must be one of 'time' or 'forecast_reference_time'."
+                )
         else:
             ds = xr.Dataset()
         # nothing missing from cache
@@ -184,7 +190,9 @@ class CacheRetriever:
                 # date irrelevant
                 p = self.path / f"{source.lower()}{kwargs_str}/{variable}"
                 p.mkdir(parents=True, exist_ok=True, mode=0o2775)
-                logging.info("Saving cache for %s %s (static) at %s", source, variable, p)
+                logging.info(
+                    "Saving cache for %s %s (static) at %s", source, variable, p
+                )
                 data[variable].to_zarr(str(p.parent), mode="a")
                 os.system(f"chmod -R 2777 {p.parent}")
             else:
@@ -192,7 +200,10 @@ class CacheRetriever:
                     day_start = pd.to_datetime(date)
                     day_end = pd.to_datetime(day_start + pd.to_timedelta("23h50m"))
                     date_str = date.strftime("%Y%m%d")
-                    p = self.path / f"{source.lower()}{kwargs_str}/{date_str}/{variable}"
+                    p = (
+                        self.path
+                        / f"{source.lower()}{kwargs_str}/{date_str}/{variable}"
+                    )
                     p.parent.mkdir(parents=True, exist_ok=True, mode=0o2775)
                     logging.info(
                         "Saving cache for %s %s on %s at %s",
@@ -211,12 +222,20 @@ class CacheRetriever:
                         )
                         xa.attrs.pop("metadata")  # weird earthkit metadata object
 
-                    unique_time_dim = "time" if "time" in data.dims else "forecast_reference_time"
+                    unique_time_dim = (
+                        "time" if "time" in data.dims else "forecast_reference_time"
+                    )
                     # time should always exist, either observation time or validity time of a forecast
-                    if len(set(data[unique_time_dim].data.flatten())) != len(data[unique_time_dim].data.flatten()):
+                    if len(set(data[unique_time_dim].data.flatten())) != len(
+                        data[unique_time_dim].data.flatten()
+                    ):
                         logging.info("Saving time with duplicated values")
                     valid_datetimes = sorted(
-                        [datetime for datetime in set(data[unique_time_dim].data) if day_start <= datetime <= day_end]
+                        [
+                            datetime
+                            for datetime in set(data[unique_time_dim].data)
+                            if day_start <= datetime <= day_end
+                        ]
                     )
                     xa = xa.sel({unique_time_dim: valid_datetimes})
                     xa = chunk_data(xa)
@@ -235,11 +254,17 @@ class DataProvider:
     _ignored_kwargs = [
         "eumdac_credentials_path",
         "jretrieve_credentials_path",
+        "meteofranceapi_token_path",
+        "path_to_grib",
     ]  # kwargs that are ignored in the kwargs_str
-    _override_kwargs = ["storage_key"]  # kwargs that override all other kwargs and are not passed to the retriever
+    _override_kwargs = [
+        "storage_key"
+    ]  # kwargs that override all other kwargs and are not passed to the retriever
     _warned_about = False  # flag to avoid multiple warnings about storage_key
 
-    def __init__(self, cache: CacheRetriever | None, retrievers: Sequence[BaseRetriever]) -> None:
+    def __init__(
+        self, cache: CacheRetriever | None, retrievers: Sequence[BaseRetriever]
+    ) -> None:
         """
         Initialize the DataProvider.
 
@@ -256,16 +281,6 @@ class DataProvider:
     def get_variable_mapping(self, source: str) -> dict[Any, Any]:
         """
         Get variable mapping for the specified source.
-
-        Parameters
-        ----------
-        source : str
-            The source identifier.
-
-        Returns
-        -------
-        dict
-            Mapping of variables associated with the source.
         """
         retrievers = self.retriever.subretrievers
         mapping_vars = {}
@@ -277,16 +292,6 @@ class DataProvider:
     def get_crs(self, source: str) -> str | dict[str, str] | None:
         """
         Get the coordinate reference system (CRS) for the given source.
-
-        Parameters
-        ----------
-        source : str
-            The source identifier.
-
-        Returns
-        -------
-        str
-            The CRS string.
         """
         retrievers = self.retriever.subretrievers
         for r in retrievers:
@@ -297,16 +302,6 @@ class DataProvider:
     def get_static_flag(self, source: str) -> bool:
         """
         Determine if the source has static variables.
-
-        Parameters
-        ----------
-        source : str
-            The source identifier.
-
-        Returns
-        -------
-        bool
-            True if the source has static variables, False otherwise.
         """
         retrievers = self.retriever.subretrievers
         for r in retrievers:
@@ -355,12 +350,16 @@ class DataProvider:
                 if formatted_kwarg:
                     parts.append(formatted_kwarg)
             except Exception as e:
-                raise ValueError(f"Error creating kwarg string key {k} with value {v}: {e}") from e
+                raise ValueError(
+                    f"Error creating kwarg string key {k} with value {v}: {e}"
+                ) from e
         if parts:
             return "_" + "_".join(parts)
         return ""
 
-    def update_retriever_with_kwargs(self, source: str, **kwargs: Any) -> "DataProvider":
+    def update_retriever_with_kwargs(
+        self, source: str, **kwargs: Any
+    ) -> "DataProvider":
         """
         Update the retriever for the specified source with new keyword arguments.
 
@@ -419,7 +418,9 @@ class DataProvider:
         all_cached_data = []
 
         for date in pd.date_range(dates[0], dates[-1], freq="D"):
-            dates_to_retrieve = [d for d in dates if pd.to_datetime(d).date() == date.date()]
+            dates_to_retrieve = [
+                d for d in dates if pd.to_datetime(d).date() == date.date()
+            ]
             logging.info(
                 "Reading %s %s data from cache for %s",
                 source,
@@ -437,7 +438,11 @@ class DataProvider:
                 time_dim = (
                     "time"
                     if "time" in cached.dims
-                    else ("forecast_reference_time" if "forecast_reference_time" in cached.dims else ("date" if "date" in cached.dims else None))
+                    else (
+                        "forecast_reference_time"
+                        if "forecast_reference_time" in cached.dims
+                        else ("date" if "date" in cached.dims else None)
+                    )
                 )
                 cached = chunk_data(cached)
                 all_cached_data.append(cached.sel({time_dim: dates_to_retrieve}))
@@ -456,7 +461,9 @@ class DataProvider:
                 kwargs_copy = copy.deepcopy(kwargs)
                 for k in self._override_kwargs:
                     kwargs_copy.pop(k, None)
-                new_data = self.retriever.retrieve(source, missing_vars, dates_to_retrieve, **kwargs_copy)
+                new_data = self.retriever.retrieve(
+                    source, missing_vars, dates_to_retrieve, **kwargs_copy
+                )
                 new_data = chunk_data(new_data)
                 all_cached_data.append(new_data)
                 try:
@@ -469,16 +476,24 @@ class DataProvider:
                         kwargs_str=self.get_kwargs_str(kwargs),
                     )
                 except PermissionError:
-                    logging.warning("Cache directory is read-only. Data will not be saved to cache.")
+                    logging.warning(
+                        "Cache directory is read-only. Data will not be saved to cache."
+                    )
 
         # Merge all datasets
         time_dim = (
             "time"
             if "time" in all_cached_data[0].dims
-            else ("forecast_reference_time" if "forecast_reference_time" in all_cached_data[0].dims else None)
+            else (
+                "forecast_reference_time"
+                if "forecast_reference_time" in all_cached_data[0].dims
+                else None
+            )
         )
         if time_dim is not None:
-            data = xr.concat(all_cached_data, dim=time_dim, coords="minimal", compat="override")
+            data = xr.concat(
+                all_cached_data, dim=time_dim, coords="minimal", compat="override"
+            )
         elif is_static:
             data = xr.merge(all_cached_data)
         else:

@@ -1,29 +1,28 @@
 surface:
   source: surface
-  variables: TOT_PREC
+  variables: rre150z0
   dates: 2025-05-06
   use_limitation: 20
 satellite-eumetsat:
   source: satellite
   variables: VIS006
   dates: 2023-12-03
-  through: eumetsat
   test: True
 opera:
   source: opera
   variables: TOT_PREC
   dates: 2024-01-02
 kenda-ch1-before-filename-change:
+  path_to_grib: /store_new/mch/msopr/osm
   source: KENDA-CH1
   variables: U
   dates: 2023-12-19
   levels: [1, 11, 21, 31, 41, 51, 61, 71]
   datatype: analysis
-  through: balfrin
 kenda-ch1-after-filename-change:
+  path_to_grib: /store_new/mch/msopr/osm
   source: KENDA-CH1
   variables: U
   dates: 2024-12-18
   levels: [1, 11, 21, 31, 41, 51, 61, 71]
   datatype: analysis
-  through: balfrin

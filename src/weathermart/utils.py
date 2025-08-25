@@ -9,21 +9,25 @@ from typing import Any
 
 import numpy as np
 
-ICON_DOMAIN = (0.5, 43, 16.5, 50) 
+ICON_DOMAIN = (0.5, 43, 16.5, 50)
 SWISS_EPSG = "epsg:2056"
 EARTH_CIRCUMFERENCE_KM = 40075
-EARTH_RADIUS_KM = EARTH_CIRCUMFERENCE_KM / 2*np.pi
+EARTH_RADIUS_KM = EARTH_CIRCUMFERENCE_KM / 2 * np.pi
 
-def get_nrows_ncols_from_domain_size_and_reskm(domain: tuple[float, float, float, float], res_km: float) -> tuple[int, int]:
+
+def get_nrows_ncols_from_domain_size_and_reskm(
+    domain: tuple[float, float, float, float], res_km: float
+) -> tuple[int, int]:
     """
     Calculate number of rows and columns for a given domain and resolution in km.
     """
     min_lon, min_lat, max_lon, max_lat = domain
-    km_per_degree = EARTH_CIRCUMFERENCE_KM / 360.0 
+    km_per_degree = EARTH_CIRCUMFERENCE_KM / 360.0
     lat_km = (max_lat - min_lat) * km_per_degree
     avg_lat = (min_lat + max_lat) / 2.0
     lon_km = (max_lon - min_lon) * km_per_degree * cos(radians(avg_lat))
-    return lat_km//res_km, lon_km//res_km
+    return lat_km // res_km, lon_km // res_km
+
 
 def read_file(path: str | Path) -> list[str]:
     """

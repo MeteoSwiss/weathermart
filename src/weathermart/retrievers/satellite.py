@@ -23,13 +23,17 @@ from weathermart.utils import get_nrows_ncols_from_domain_size_and_reskm
 
 max_workers = os.cpu_count()
 
+
 def round_to_nearest_15_minutes(dt: datetime.datetime) -> datetime.datetime:
+    """Round a datetime object to the nearest 15 minutes."""
     rounded_minutes = 15 * round(dt.minute / 15)
     delta_minutes = rounded_minutes - dt.minute
-    return (dt + datetime.timedelta(minutes=delta_minutes)).replace(second=0, microsecond=0)
+    return (dt + datetime.timedelta(minutes=delta_minutes)).replace(
+        second=0, microsecond=0
+    )
 
 
-class SatelliteEumetsatRetriever(BaseRetriever):
+class EumetsatRetriever(BaseRetriever):
     crs = "epsg:4326"
     sources = ("SATELLITE",)
     variables = {
@@ -79,6 +83,8 @@ class SatelliteEumetsatRetriever(BaseRetriever):
             or a float representing the resolution in kilometers. Default is 1km.
         eumdac_credentials_path : str, optional
             Path to the file containing the EUMETSAT API token. Default is None.
+        test : bool, optional
+            If True, only the first 30 minutes of data per day will be downloaded for testing purposes.
 
         Returns
         -------
@@ -104,7 +110,7 @@ class SatelliteEumetsatRetriever(BaseRetriever):
             ) from exc
         dates, variables = checktype(dates, variables)
         if isinstance(resolution, str) and "km" in resolution:
-            self.res_km =  float(resolution.replace("km", ""))
+            self.res_km = float(resolution.replace("km", ""))
         else:
             self.res_km = resolution
 
@@ -113,7 +119,9 @@ class SatelliteEumetsatRetriever(BaseRetriever):
             eumdac_key = os.environ.get("EUMDAC_KEY")
             eumdac_secret = os.environ.get("EUMDAC_SECRET")
             if eumdac_key and eumdac_secret:
-                logging.warning("Using EUMDAC_KEY and EUMDAC_SECRET environment variable.")
+                logging.warning(
+                    "Using EUMDAC_KEY and EUMDAC_SECRET environment variable."
+                )
                 token = eumdac.AccessToken((eumdac_key, eumdac_secret))
             else:
                 raise RuntimeError(
@@ -123,7 +131,9 @@ class SatelliteEumetsatRetriever(BaseRetriever):
             try:
                 with open(eumdac_credentials_path, encoding="utf-8") as json_file:
                     credentials = json.load(json_file)
-                    token = eumdac.AccessToken((credentials["consumer_key"], credentials["consumer_secret"]))
+                    token = eumdac.AccessToken(
+                        (credentials["consumer_key"], credentials["consumer_secret"])
+                    )
             except KeyError as exc:
                 raise RuntimeError(
                     "Please provide a path to a .eumdac_credentials file in kwargs for authentification. "
@@ -135,10 +145,14 @@ class SatelliteEumetsatRetriever(BaseRetriever):
         datastore = eumdac.DataStore(token)
         selected_collection = datastore.get_collection("EO:EUM:DAT:MSG:HRSEVIRI")
 
-        def download_and_resample(products: SearchResults, variables: list[tuple[str, dict]]) -> xr.Dataset:
+        def download_and_resample(
+            products: SearchResults, variables: list[tuple[str, dict]]
+        ) -> xr.Dataset:
             def download(product: Product, tmpdir: str) -> None:
                 start = time.time()
-                filename = next(entry for entry in product.entries if entry.endswith(".nat"))
+                filename = next(
+                    entry for entry in product.entries if entry.endswith(".nat")
+                )
                 try:
                     with (
                         product.open(entry=filename) as fsrc,
@@ -150,8 +164,12 @@ class SatelliteEumetsatRetriever(BaseRetriever):
                 end = time.time()
                 logging.debug("Downloading %s took %.2f seconds", filename, end - start)
 
-            def open_and_resample(filenames: list[str], variables: list[tuple[str, dict]]) -> list[xr.Dataset]:
-                width, height = get_nrows_ncols_from_domain_size_and_reskm(bbox, self.res_km)
+            def open_and_resample(
+                filenames: list[str], variables: list[tuple[str, dict]]
+            ) -> list[xr.Dataset]:
+                width, height = get_nrows_ncols_from_domain_size_and_reskm(
+                    bbox, self.res_km
+                )
                 area = AreaDefinition(
                     area_id="custom_bbox",
                     proj_id="custom_bbox",
@@ -176,7 +194,9 @@ class SatelliteEumetsatRetriever(BaseRetriever):
                             try:
                                 scn = scn.resample(area, resampler="nearest")
                             except Exception as e:
-                                logging.error("%s with error: %s, skipping file", filename, e)
+                                logging.error(
+                                    "%s with error: %s, skipping file", filename, e
+                                )
                                 continue
 
                         data_arrays = {}
@@ -188,19 +208,26 @@ class SatelliteEumetsatRetriever(BaseRetriever):
 
                         # add time dimension
                         timestamp = round_to_nearest_15_minutes(
-                            datetime.datetime.strptime(filename.split("-")[5].split(".")[0], "%Y%m%d%H%M%S")
+                            datetime.datetime.strptime(
+                                filename.split("-")[5].split(".")[0], "%Y%m%d%H%M%S"
+                            )
                         )
                         ds = xr.Dataset(data_arrays).expand_dims(time=[timestamp])
                         ds_list.append(ds)
                         end = time.time()
-                        logging.debug("Resampling %s took %.2f seconds", filename, end - start)
+                        logging.debug(
+                            "Resampling %s took %.2f seconds", filename, end - start
+                        )
                     except ValueError as e:
                         logging.error("%s with error: %s, skipping file", filename, e)
                 return ds_list
 
             with TemporaryDirectory() as tmpdir:
                 with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                    futures = [executor.submit(download, product, tmpdir) for product in products]
+                    futures = [
+                        executor.submit(download, product, tmpdir)
+                        for product in products
+                    ]
                     for future in as_completed(futures):
                         try:
                             future.result()
@@ -217,8 +244,12 @@ class SatelliteEumetsatRetriever(BaseRetriever):
 
         ds_list = []
         for date in dates:
-            start = datetime.datetime.combine(date, datetime.time(0, 0, 0)) - datetime.timedelta(minutes=10)
-            end = datetime.datetime.combine(date, datetime.time(23, 59, 59)) - datetime.timedelta(minutes=10)
+            start = datetime.datetime.combine(
+                date, datetime.time(0, 0, 0)
+            ) - datetime.timedelta(minutes=10)
+            end = datetime.datetime.combine(
+                date, datetime.time(23, 59, 59)
+            ) - datetime.timedelta(minutes=10)
             if test:
                 end = datetime.datetime.combine(date, datetime.time(0, 30, 0))
             # Retrieve datasets that match our filter
@@ -231,5 +262,7 @@ class SatelliteEumetsatRetriever(BaseRetriever):
         # merge data for all dates
         ds = xr.concat(ds_list, dim="time")
         # rename all variables back to "global" variable names
-        ds = ds.rename({k[0]: j for j, k in self.variables.items() if k[0] in ds.data_vars})
+        ds = ds.rename(
+            {k[0]: j for j, k in self.variables.items() if k[0] in ds.data_vars}
+        )
         return ds

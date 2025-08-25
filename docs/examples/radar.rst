@@ -19,4 +19,3 @@ See here (internal link) for more information on how to obtain the API key: http
     .. image:: ../_static/opera_20231020.png
     :width: 800
     :align: center
-
