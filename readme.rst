@@ -66,7 +66,7 @@ Finally, describe your request in a dict-like config:
        "dates": dates,
        "CMSAF": "cloud_area_fraction",
        "ICON-CH1-EPS": ["U_10M", "V_10M"],
-       "SURFACE": "air_temperature",
+       "SURFACE": "tre200s0",
        "NASADEM": "nasadem",
        }
 
