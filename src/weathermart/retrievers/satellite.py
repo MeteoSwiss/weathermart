@@ -244,16 +244,22 @@ class EumetsatRetriever(BaseRetriever):
 
         ds_list = []
         for date in dates:
-            start = datetime.datetime.combine(
-                date, datetime.time(0, 0, 0)
-            ) - datetime.timedelta(minutes=10)
-            end = datetime.datetime.combine(
-                date, datetime.time(23, 59, 59)
-            ) - datetime.timedelta(minutes=10)
+            start = datetime.datetime.combine(date, datetime.time(0, 0, 0)) - datetime.timedelta(minutes=10)
+            end = datetime.datetime.combine(date, datetime.time(23, 59, 59)) - datetime.timedelta(minutes=10)
             if test:
                 end = datetime.datetime.combine(date, datetime.time(0, 30, 0))
             # Retrieve datasets that match our filter
             products = selected_collection.search(dtstart=start, dtend=end)
+            # count number of images per satellite 
+            counts = {i: 0 for i in range(1, 5)}
+            for product in products:
+                # product.satellite contains the number (e.g. MSG3)
+                counts[int(product.satellite[3])] += 1
+            # pick the maximum msg (higher has priority)
+            max_msg = max(counts, key=lambda k: (counts[k], k))
+            logging.debug("Counts per satellite: %s", counts)
+            logging.debug("Maximum MSG selected: %d", max_msg)
+            products = [p for p in products if int(p.satellite[3]) == max_msg]
             # download the data
             with dask.config.set(num_workers=max_workers):
                 ds = download_and_resample(products, variables)
@@ -262,7 +268,5 @@ class EumetsatRetriever(BaseRetriever):
         # merge data for all dates
         ds = xr.concat(ds_list, dim="time")
         # rename all variables back to "global" variable names
-        ds = ds.rename(
-            {k[0]: j for j, k in self.variables.items() if k[0] in ds.data_vars}
-        )
+        ds = ds.rename({k[0]: j for j, k in self.variables.items() if k[0] in ds.data_vars})
         return ds

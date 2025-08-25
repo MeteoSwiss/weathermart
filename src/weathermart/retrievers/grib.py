@@ -15,7 +15,6 @@ from meteodatalab.ogd_api import _geo_coords
 from weathermart.base import BaseRetriever
 from weathermart.base import checktype
 from weathermart.base import variables_metadata
-from weathermart.retrievers.fdb_base import FDBRetriever
 
 nwp_dic = {
     k: [k]
@@ -266,72 +265,3 @@ class GribRetriever(BaseRetriever):
             ds = results[0]
             return ds
         raise RuntimeError("No results found for the given parameters.")
-
-
-class NWPRetrieverFDB(FDBRetriever):
-    """
-    Retriever for NWP data utilizing the FDB system.
-
-    This class, inheriting from FDBRetriever, is used for retrieving numerical weather prediction
-    data from FDB sources.
-    """
-
-    def __init__(self) -> None:
-        """
-        Initialize the NWPRetrieverFDB instance.
-
-        Configures origin coordinates and CRS, sets metadata fields, sources, and variables.
-        """
-        self.origin_lon = 10
-        self.origin_lat = 47
-        self.crs = (
-            f"+proj=ob_tran +o_proj=longlat +lon_0={-180 + self.origin_lon} +o_lon_p=-180"
-            f" +o_lat_p={90 + self.origin_lat}"
-        )  # rotated lat-lon
-        sources = (
-            "COSMO-1E",
-            "COSMO-2E",
-            "KENDA-1",
-            "ICON-CH1-EPS",
-            "ICON-CH2-EPS",
-        )
-        variables = nwp_dic
-        super().__init__(sources, variables)
-
-    def retrieve(
-        self,
-        source: str,
-        variables: list[tuple[str, dict]],
-        dates: datetime.date | str | pd.Timestamp | list[Any],
-        datatype: str = "analysis",
-        ensemble_members: list[int] | int | None = 0,
-    ) -> xr.Dataset:
-        """
-        Retrieve NWP data from FDB for given source, variables, and dates.
-
-        Parameters
-        ----------
-        source : str
-            Source identifier.
-        variables : list of tuple of (str, dict)
-            List of variable definitions.
-        dates : list of datetime.date or datetime.date
-            Date or list of dates.
-        datatype : str, optional
-            Type of data retrieval (default is "analysis").
-        ensemble_members : int or list of int, optional
-            The ensemble member number for the forecast retrieval. Defaults to 0.
-
-        Returns
-        -------
-        xarray.Dataset
-            Retrieved dataset with the forecast_reference_time.
-        """
-        dates, variables = checktype(dates, variables)
-        return super().retrieve(
-            source,
-            variables,
-            dates,
-            datatype=datatype,
-            ensemble_members=ensemble_members,
-        )

@@ -8,7 +8,9 @@ import xarray as xr
 
 from weathermart.base import BaseRetriever
 from weathermart.base import checktype
+from weathermart.base import variables_metadata
 
+nwp_dic = {k: [k] for k in variables_metadata[variables_metadata.source == "ECCODES_COSMO"].short_name.unique()}
 type_mapping = {
     "analysis": {"type": "det", "stream": "enda"},
     "forecast": {"type": "ememb", "stream": "enfo"},
@@ -29,7 +31,9 @@ def initialize_fdb() -> None:
     """
     view = Path(os.environ["SCRATCH"]) / "spack-view"
     os.environ["FDB5_HOME"] = str(view)
-    os.environ["FDB5_CONFIG"] = """
+    os.environ[
+        "FDB5_CONFIG"
+    ] = """
     ---
     type: remote
     engine: remote
@@ -55,21 +59,26 @@ class FDBRetriever(BaseRetriever):
         List of variables represented as tuples of variable name and additional parameters.
     """
 
-    def __init__(
-        self, sources: tuple[str, ...], variables: dict[str, list[Any]]
-    ) -> None:
+    def __init__(self) -> None:
         """
-        Initialize the FDBRetriever instance.
+        Initialize the NWPRetrieverFDB instance.
 
-        Parameters
-        ----------
-        sources : tuple of str
-            Tuple of source identifiers.
-        variables : list of tuple (str, dict)
-            List of variables represented as tuples of variable name and associated parameters.
+        Configures origin coordinates and CRS, sets metadata fields, sources, and variables.
         """
-        self.variables = variables
-        self.sources = sources
+        self.origin_lon = 10
+        self.origin_lat = 47
+        self.crs = (
+            f"+proj=ob_tran +o_proj=longlat +lon_0={-180 + self.origin_lon} +o_lon_p=-180"
+            f" +o_lat_p={90 + self.origin_lat}"
+        )  # rotated lat-lon
+        self.sources = (
+            "COSMO-1E",
+            "COSMO-2E",
+            "KENDA-1",
+            "ICON-CH1-EPS",
+            "ICON-CH2-EPS",
+        )
+        self.variables = nwp_dic
 
     def retrieve(
         self,
@@ -120,9 +129,7 @@ class FDBRetriever(BaseRetriever):
             elif isinstance(ensemble_members, int):
                 ensembles = (ensemble_members,)
             else:
-                raise TypeError(
-                    f"ensemble_members must be int, list or tuple, got {type(ensemble_members)}"
-                )
+                raise TypeError(f"ensemble_members must be int, list or tuple, got {type(ensemble_members)}")
         else:
             ensembles = ensemble_members
         dates, variables = checktype(dates, variables)

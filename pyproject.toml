@@ -36,7 +36,7 @@ CEDTMRetriever = "weathermart.retrievers:CEDTMRetriever"
 NASADEMRetriever = "weathermart.retrievers:NASADEMRetriever"
 DHM25Retriever = "weathermart.retrievers:DHM25Retriever"
 DWHRetriever = "weathermart.retrievers:DWHRetriever"
-NWPRetrieverFDB = "weathermart.retrievers:NWPRetrieverFDB"
+FDBRetriever = "weathermart.retrievers:FDBRetriever"
 OperaRetriever = "weathermart.retrievers:OperaRetriever"
 EumetsatRetriever = "weathermart.retrievers:EumetsatRetriever"
 
