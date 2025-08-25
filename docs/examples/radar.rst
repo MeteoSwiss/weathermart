@@ -1,0 +1,22 @@
+Radar Data
+==========
+
+
+OPERA Radar (MeteoFrance API)
+-----------
+You can also retrieve OPERA radar data from the MeteoFrance API.
+This requires an API key, which you can obtain by registering on the MeteoFrance website.
+See here (internal link) for more information on how to obtain the API key: https://meteoswiss.atlassian.net/wiki/spaces/MR/pages/726697055/OPERA+radar+data+via+MeteoFranceAPI
+
+.. code-block:: python
+
+    from weathermart.retrievers.radar import MeteoFranceOperaRadarRetriever
+
+    retriever = MeteoFranceOperaRadarRetriever()
+
+    ds = retriever.retrieve("OPERA", "TOT_PREC", ["2024-01-01", "2024-01-02"])
+
+    .. image:: ../_static/opera_20231020.png
+    :width: 800
+    :align: center
+

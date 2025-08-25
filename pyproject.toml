@@ -1,0 +1,43 @@
+[build-system]
+requires = ["uv_build>=0.8.13,<0.9.0"]
+build-backend = "uv_build"
+
+[project]
+name = "weathermart"
+version = "0.1.0"
+description = "Dispatcher to fulfill all your weather data needs"
+readme = "README.md"
+authors = [
+    { name = "Ophélia Miralles", email = "opheliamiralles@gmail.com" }
+]
+requires-python = ">=3.10"
+dependencies = [
+    "geopandas>=1.0.1",
+    "httpx>=0.28.1",
+    "meteodata-lab>=0.4.0",
+    "numpy>=1.26.4",
+    "omegaconf>=2.3.0",
+    "pandas>=2.3.2",
+    "xarray>=2025.6.1",
+    "zarr>=2.18.3",
+]
+
+[project.optional-dependencies]
+radar = [
+    "wradlib>=2.4.0",
+]
+eumetsat = ["satpy", "eumdac", "pyresample"]
+dem = ["rioxarray", "pystac-client", "planetary-computer"]
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.3.0",
+    "pytest>=8.4.1",
+    "ruff>=0.12.10",
+]
+
+[tool.ruff.lint]
+extend-select = ["I", "UP"]
+
+[tool.ruff.lint.isort]
+force-single-line = true

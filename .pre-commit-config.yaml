@@ -1,0 +1,49 @@
+repos:
+  - repo: meta
+    hooks:
+      - id: check-hooks-apply
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-yaml # Check YAML files for syntax errors only
+        args: [--unsafe, --allow-multiple-documents]
+      - id: debug-statements # Check for debugger imports and py37+ breakpoint()
+      - id: end-of-file-fixer # Ensure files end in a newline
+      - id: trailing-whitespace # Trailing whitespace checker
+      - id: no-commit-to-branch # Prevent committing to main / master
+      - id: check-merge-conflict # Check for files that contain merge conflict
+  - repo: https://github.com/pre-commit/pygrep-hooks
+    rev: v1.10.0
+    hooks:
+      - id: rst-backticks
+      - id: rst-directive-colons
+      - id: rst-inline-touching-normal
+      - id: python-check-blanket-noqa # Check for # noqa: all
+      - id: python-no-log-warn # Check for log.warn
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.12.10
+    hooks:
+      - id: ruff-check
+        args:
+          - --fix
+          - --show-fixes
+          - --exit-non-zero-on-fix
+      - id: ruff-format
+  - repo: https://github.com/sphinx-contrib/sphinx-lint
+    rev: v1.0.0
+    hooks:
+      - id: sphinx-lint
+  - repo: https://github.com/jshwi/docsig # Check docstrings against function sig
+    rev: v0.71.0
+    hooks:
+      - id: docsig
+        args:
+          - --ignore-no-params # Allow docstrings without parameters
+          - --check-dunders # Check dunder methods
+          - --check-overridden # Check overridden methods
+          - --check-protected # Check protected methods
+          - --check-class # Check class docstrings
+          - --disable=E113 # Disable empty docstrings
+
+ci:
+  autoupdate_schedule: monthly
