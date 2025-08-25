@@ -5,7 +5,7 @@
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
-project = "data-provider"
+project = "weathermart"
 copyright = "2025, MeteoSwiss"
 author = "Ophélia Miralles"
 

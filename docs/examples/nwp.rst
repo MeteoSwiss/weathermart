@@ -27,8 +27,8 @@ The GribRetriever is designed for NPW outputs from a local filesystem on grib2 f
     }
     provider.provide_from_config(
         config,
-        type="forecast",
-        step_hour=np.arange(0, 9),
+        data_type="forecast",
+        step_hours=np.arange(0, 9),
         ensemble_members=0,
     )
 

@@ -3,10 +3,10 @@ Radar Data
 
 
 OPERA Radar (MeteoFrance API)
------------
+-----------------------------
+
 You can also retrieve OPERA radar data from the MeteoFrance API.
 This requires an API key, which you can obtain by registering on the MeteoFrance website.
-See here (internal link) for more information on how to obtain the API key: https://meteoswiss.atlassian.net/wiki/spaces/MR/pages/726697055/OPERA+radar+data+via+MeteoFranceAPI
 
 .. code-block:: python
 

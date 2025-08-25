@@ -1,6 +1,7 @@
 Station Data
 ============
-Station data is retrieved through ``jretrieve`` API.
+
+Station data is retrieved through ``jretrieve`` API, which is an internal MeteoSwiss API.
 You need to have a valid jretrieve credentials file (warning: not an offline token) to access the data.
 Contact the data provider team to get access to the credentials file.
 
@@ -20,11 +21,12 @@ Values above 40 raise an Exception.
     provider = default_provider()
     config = {
         "SURFACE": [
-            "TOT_PREC",
-            "U_10M",
-            "V_10M",
-            "T_2M",
-            "TD_2M",
+            "dkl010z0",
+            "fkl010z0",
+            "prestas0",
+            "rre150z0",
+            "tde200s0",
+            "tde200s0"
         ],
         "dates": pd.date_range(start, end),
     }
